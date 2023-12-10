@@ -1,4 +1,3 @@
-from game import Game
 from board import Board
 from piece import Piece, PieceColor, PieceType
 from square import Square
@@ -6,17 +5,17 @@ from move import Move
 
 class GameRules:
     @staticmethod
-    def get_all_legal_moves(game: Game) -> list[Move]:
-        return GameRules.__get_all_psuedo_legal_moves(game)
+    def get_legal_moves(board: Board, turn: PieceColor) -> list[Move]:
+        return GameRules.__get_psuedo_legal_moves(board, turn)
     
     @staticmethod
-    def __get_all_psuedo_legal_moves(game: Game) -> list[Move]:
-        squares_with_own_pieces = game.board.get_squares_with_pieces(game.turn)
+    def __get_psuedo_legal_moves(board: Board, turn: PieceColor) -> list[Move]:
+        squares_with_own_pieces = board.get_squares_with_pieces(turn)
         
         psuedo_legal_moves = []
         for square in squares_with_own_pieces:
-            piece = game.board[square]
-            psuedo_legal_moves.extend(GameRules.__get_psuedo_legal_moves(piece, square, game.board))
+            piece = board[square]
+            psuedo_legal_moves.extend(GameRules.__get_psuedo_legal_moves_for_piece(piece, square, board))
         
         return psuedo_legal_moves
     
@@ -25,7 +24,7 @@ class GameRules:
         pass
     
     @staticmethod
-    def __get_psuedo_legal_moves(piece: Piece, start_square: Square, board: Board) -> list[Move]:
+    def __get_psuedo_legal_moves_for_piece(piece: Piece, start_square: Square, board: Board) -> list[Move]:
         psuedo_legal_moves = []
         
         opponent_color = PieceColor.BLACK if piece.color == PieceColor.WHITE else PieceColor.WHITE
@@ -101,8 +100,8 @@ class GameRules:
             
             case PieceType.QUEEN:
                 psuedo_legal_moves.extend(
-                    GameRules.__get_psuedo_legal_moves(Piece(piece.color, PieceType.BISHOP), start_square, board) +
-                    GameRules.__get_psuedo_legal_moves(Piece(piece.color, PieceType.ROOK), start_square, board)
+                    GameRules.__get_psuedo_legal_moves_for_piece(Piece(piece.color, PieceType.BISHOP), start_square, board) +
+                    GameRules.__get_psuedo_legal_moves_for_piece(Piece(piece.color, PieceType.ROOK), start_square, board)
                 )                
             
             case PieceType.KING:

@@ -106,7 +106,7 @@ class Graphics:
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         
-    def handle_click(self, coordinates: tuple[int, int], board: Board, turn, available_moves: list[Move]) -> Optional[Move]:               
+    def handle_click(self, coordinates: tuple[int, int], board: Board, turn, legal_moves: list[Move]) -> Optional[Move]:               
         move = None
         
         clicked_square = Coordinates.get_square(coordinates)
@@ -117,7 +117,7 @@ class Graphics:
         elif clicked_square in board.get_squares_with_pieces(turn):
             print('Clicked own piece')
             self.selected_square = clicked_square
-            self.selected_square_moves = [move.end for move in available_moves if move.start == clicked_square]
+            self.selected_square_moves = [move.end for move in legal_moves if move.start == clicked_square]
         
         elif self.selected_square is not None:
             if clicked_square in self.selected_square_moves:

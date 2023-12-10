@@ -25,8 +25,7 @@ while running:
             
         if event.type == pygame.MOUSEBUTTONDOWN:
             print('Click')
-            available_moves = GameRules.get_all_legal_moves(game)
-            move = graphics.handle_click(mouse_position, game.board, game.turn, available_moves)
+            move = graphics.handle_click(mouse_position, game.board, game.turn, game.legal_moves)
             
             if move is not None:
                 print(f'{move}')
