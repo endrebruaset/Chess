@@ -1,6 +1,7 @@
 from board import Board
 from square import Square
 from piece import Piece, PieceColor, PieceType
+from move import Move
 from typing import Optional
 
 
@@ -9,7 +10,7 @@ class Game:
         self.board = Board()
         self.turn = PieceColor.WHITE
         self.double_pawn_push: Optional[Square] = None
-        self.castling_right = {
+        self.castling_rights = {
             PieceColor.WHITE: { "a": True, "h": True },
             PieceColor.BLACK: { "a": True, "h": True }
         }
@@ -28,4 +29,8 @@ class Game:
         for column in range(8):
             self.board[Square(1, column)] = Piece(PieceColor.WHITE, PieceType.PAWN)
             self.board[Square(6, column)] = Piece(PieceColor.BLACK, PieceType.PAWN)
-            
+        
+    def make_move(self, move: Move) -> None:
+        self.board[move.end] = self.board[move.start]
+        self.board[move.start] = None
+        self.turn = PieceColor.BLACK if self.turn == PieceColor.WHITE else PieceColor.WHITE

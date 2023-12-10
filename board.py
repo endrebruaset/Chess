@@ -8,13 +8,13 @@ class Board:
         self.board: dict[Square, Optional[Piece]] = { square: None for square in self.squares }
         
     def __getitem__(self, square: Square):
-        if 0 <= square.row < 8 and 0 <= square.column < 8:
+        if square.is_valid():
             return self.board[square]
         else:
             raise KeyError(f'Invalid square: {square}')
             
     def __setitem__(self, square: Square, piece: Piece):
-        if 0 <= square.row < 8 and 0 <= square.column < 8:
+        if square.is_valid():
             self.board[square] = piece
         else:
             raise KeyError(f'Invalid square: {square}')
@@ -37,5 +37,4 @@ class Board:
             if piece is None:
                 empty_squares.append(square)
                 
-        return empty_squares
-    
+        return empty_squares    

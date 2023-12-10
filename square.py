@@ -11,3 +11,6 @@ class Square:
     
     def __hash__(self) -> int:
         return hash((self.row, self.column))
+    
+    def is_valid(self):
+        return 0 <= self.row < 8 and 0 <= self.column < 8

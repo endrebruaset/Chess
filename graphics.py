@@ -92,32 +92,39 @@ class Graphics:
         # Update display
         pygame.display.flip()
         
-    def set_cursor(self, coordinates: tuple[int, int], board: Board, color: PieceColor) -> None:
-        if Mouse.is_own_piece(coordinates, board, color):
+    def set_cursor(self, coordinates: tuple[int, int], board: Board, turn: PieceColor) -> None:
+        square_hovered = Coordinates.get_square(coordinates)
+        if square_hovered is None:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+            
+        elif square_hovered in board.get_squares_with_pieces(turn):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
             
-        elif self.selected_square is not None and Coordinates.get_square(coordinates) in self.selected_square_moves:
+        elif self.selected_square is not None and square_hovered in self.selected_square_moves:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
             
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         
-    def handle_click(self, coordinates: tuple[int, int], board: Board, turn, available_moves: list[Move]) -> Optional[Move]:
+    def handle_click(self, coordinates: tuple[int, int], board: Board, turn, available_moves: list[Move]) -> Optional[Move]:               
         move = None
         
-        if Mouse.is_own_piece(coordinates, board, turn):
-            self.selected_square = Coordinates.get_square(coordinates)
-            self.selected_square_moves = [move.end for move in available_moves if move.start == self.selected_square]
+        clicked_square = Coordinates.get_square(coordinates)
+        print(f'{clicked_square}')
+        if clicked_square is None:
+            self.selected_square = None
+        
+        elif clicked_square in board.get_squares_with_pieces(turn):
+            print('Clicked own piece')
+            self.selected_square = clicked_square
+            self.selected_square_moves = [move.end for move in available_moves if move.start == clicked_square]
         
         elif self.selected_square is not None:
-            end_square = Coordinates.get_square(coordinates)
-            
-            if end_square in self.selected_square_moves:
-                move = Move(self.selected_square, end_square)
-            
+            if clicked_square in self.selected_square_moves:
+                move = Move(self.selected_square, clicked_square)
+                
             self.selected_square = None
-            
-        self.draw_board(board)
+        
         return move
       
 class Coordinates:
@@ -142,15 +149,3 @@ class Coordinates:
             return Square(row, column)
         else: 
             return None
-        
-class Mouse():
-    @staticmethod
-    def is_own_piece(coordinates: tuple[int, int], board: Board, color: PieceColor) -> bool:
-        square = Coordinates.get_square(coordinates)
-        if square is None:
-            return False
-        
-        piece = board.board[square]
-        return piece and piece.color == color
-    
-    

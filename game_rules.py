@@ -66,16 +66,17 @@ class GameRules:
                         psuedo_legal_moves.append(Move(start_square, end_square))
             
             case PieceType.BISHOP:
-                directions = [(1, 1), (1, -1), (-1, 1), (-1, 1)]
+                directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
                 for direction in directions:
                     steps = 1
                     while True:
                         end_square = Square(start_square.row + direction[0]*steps, start_square.column + direction[1]*steps)
                         if end_square in empty_squares:
-                            psuedo_legal_moves.append(end_square)
+                            psuedo_legal_moves.append(Move(start_square, end_square))
+                            steps += 1
                         
                         elif end_square in squares_with_opponent_pieces:
-                            psuedo_legal_moves.append(end_square)
+                            psuedo_legal_moves.append(Move(start_square, end_square))
                             break
                         
                         else:
@@ -88,10 +89,11 @@ class GameRules:
                     while True:
                         end_square = Square(start_square.row + direction[0]*steps, start_square.column + direction[1]*steps)
                         if end_square in empty_squares:
-                            psuedo_legal_moves.append(end_square)
+                            psuedo_legal_moves.append(Move(start_square, end_square))
+                            steps += 1
                         
                         elif end_square in squares_with_opponent_pieces:
-                            psuedo_legal_moves.append(end_square)
+                            psuedo_legal_moves.append(Move(start_square, end_square))
                             break
                         
                         else:
