@@ -9,6 +9,10 @@ class Game:
         self.board = Board()
         self.turn = PieceColor.WHITE
         self.double_pawn_push: Optional[Square] = None
+        self.castling_right = {
+            PieceColor.WHITE: { "a": True, "h": True },
+            PieceColor.BLACK: { "a": True, "h": True }
+        }
         
         # Create starting position
         for row, color in zip([0, 7], [PieceColor.WHITE, PieceColor.BLACK]):
@@ -24,3 +28,4 @@ class Game:
         for column in range(8):
             self.board[Square(1, column)] = Piece(PieceColor.WHITE, PieceType.PAWN)
             self.board[Square(6, column)] = Piece(PieceColor.BLACK, PieceType.PAWN)
+            

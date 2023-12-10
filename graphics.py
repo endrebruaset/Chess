@@ -1,16 +1,17 @@
 from board import Board
 from piece import PieceColor, PieceType
 from square import Square
+from move import Move
 from typing import Optional
 from settings import SQUARE_SIZE
 import pygame
 
-class SquareColor:
-    LIGHT = pygame.Color('#ffffff')
-    DARK = pygame.Color('#51753f')
-    CHECK = pygame.Color('#ba4141')
-    SELECTED = pygame.Color('#fad96e')
-    LATEST_MOVE = pygame.Color('#fcd03d')
+class Color:
+    LIGHT_SQAURE = pygame.Color('#ffffff')
+    DARK_SQUARE = pygame.Color('#51753f')
+    CHECKED_SQUARE = pygame.Color('#ba4141')
+    SELECTED_SQUARE = pygame.Color('#fff785')
+    MOVE_CIRCLE = pygame.Color('#000000')
 
 class Graphics:
     piece_images = {
@@ -38,18 +39,29 @@ class Graphics:
         
         # Create background
         self.background = pygame.Surface((height, width))
-        self.background.fill(SquareColor.LIGHT)
+        self.background.fill(Color.LIGHT_SQAURE)
         for row in range(0, 8):
             for column in range(0, 8):
                 if (row + column) % 2 == 0:
                     pygame.draw.rect(
                         self.background, 
-                        SquareColor.DARK, 
+                        Color.DARK_SQUARE, 
                         (row * SQUARE_SIZE, column * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
                     )
+                    
+        # Create move circle
+        self.move_circle = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
+        self.move_circle.set_alpha(100)
+        pygame.draw.circle(
+            self.move_circle,
+            Color.MOVE_CIRCLE,
+            center=(SQUARE_SIZE / 2, SQUARE_SIZE / 2),
+            radius=SQUARE_SIZE / 5
+        )
         
         # Mouse state
         self.selected_square: Optional[Square] = None
+        self.selected_square_moves: list[Square] = []
         
     def draw_board(self, board: Board) -> None:
         # Draw empty board
@@ -58,19 +70,24 @@ class Graphics:
         # Highlight selected square
         if self.selected_square is not None:
             (x, y) = Coordinates.get_coordinates(self.selected_square)
-            
             pygame.draw.rect(
                 self.display,
-                SquareColor.SELECTED,
+                Color.SELECTED_SQUARE,
                 (x, y, SQUARE_SIZE, SQUARE_SIZE)
             )
         
         # Draw pieces
-        for square, piece in board.board.items():
-            if piece is not None:
-                coordinates = Coordinates.get_coordinates(square)
-                piece_image = self.piece_images[piece.color][piece.type]
-                self.display.blit(piece_image, coordinates)
+        squares_with_pieces = board.get_squares_with_pieces(PieceColor.WHITE) + board.get_squares_with_pieces(PieceColor.BLACK)
+        for square in squares_with_pieces:
+            coordinates = Coordinates.get_coordinates(square)
+            piece = board[square]
+            piece_image = self.piece_images[piece.color][piece.type]
+            self.display.blit(piece_image, coordinates)
+        
+        # Show available moves
+        if self.selected_square is not None:
+            for square in self.selected_square_moves:
+                self.display.blit(self.move_circle, Coordinates.get_coordinates(square))
         
         # Update display
         pygame.display.flip()
@@ -78,21 +95,30 @@ class Graphics:
     def set_cursor(self, coordinates: tuple[int, int], board: Board, color: PieceColor) -> None:
         if Mouse.is_own_piece(coordinates, board, color):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            
+        elif self.selected_square is not None and Coordinates.get_square(coordinates) in self.selected_square_moves:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         
-    def handle_click(self, coordinates: tuple[int, int], board: Board, turn) -> None:
+    def handle_click(self, coordinates: tuple[int, int], board: Board, turn, available_moves: list[Move]) -> Optional[Move]:
+        move = None
+        
         if Mouse.is_own_piece(coordinates, board, turn):
             self.selected_square = Coordinates.get_square(coordinates)
-            print(f'Set selected piece: {self.selected_square}')
+            self.selected_square_moves = [move.end for move in available_moves if move.start == self.selected_square]
         
         elif self.selected_square is not None:
-            squared_to_move_to = Coordinates.get_square(coordinates)
-            print(f'Move from {self.selected_square} to {squared_to_move_to}')
+            end_square = Coordinates.get_square(coordinates)
+            
+            if end_square in self.selected_square_moves:
+                move = Move(self.selected_square, end_square)
+            
             self.selected_square = None
             
         self.draw_board(board)
-        
+        return move
       
 class Coordinates:
     @staticmethod

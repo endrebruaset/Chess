@@ -1,4 +1,5 @@
 from game import Game
+from game_rules import GameRules
 from graphics import Graphics
 import pygame
 
@@ -23,5 +24,9 @@ while running:
             running = False
             
         if event.type == pygame.MOUSEBUTTONDOWN:
-            graphics.handle_click(mouse_position, game.board, game.turn)
+            available_moves = GameRules.get_all_legal_moves(game)
+            move = graphics.handle_click(mouse_position, game.board, game.turn, available_moves)
+            
+            if move is not None:
+                print(f'Move from {move.start} to {move.end}')
             # Update game
