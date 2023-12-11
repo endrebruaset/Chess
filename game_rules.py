@@ -3,6 +3,14 @@ from board import Board
 from piece import Piece, PieceColor, PieceType
 from square import Square
 from move import Move, MoveType
+from typing import Optional
+from enum import Enum
+
+class Result(Enum):
+    WHITE_WIN = 0,
+    BLACK_WIN = 1
+    STALEMATE = 2,
+    INSUFFICIENT_MATERIAL = 3  
 
 class GameRules:
     @staticmethod
@@ -38,6 +46,23 @@ class GameRules:
         # King is in check if attacked by opposing pieces
         return king_square in attacked_squares
     
+    @staticmethod
+    def get_game_result(game: Game) -> Optional[Result]:
+        # Game is over if there are no legal moves
+        # Get result
+        if len(GameRules.get_legal_moves(game)) == 0:
+            if GameRules.is_check(game.board, game.turn):
+                return Result.WHITE_WIN if game.turn == PieceColor.BLACK else Result.BLACK_WIN
+            else:
+                return Result.STALEMATE
+            
+        # Check for insufficient material
+        white_pieces = [game.board[square] for square in game.board.get_squares_with_pieces(PieceColor.WHITE)]
+        black_pieces = [game.board[square] for square in game.board.get_squares_with_pieces(PieceColor.BLACK)]
+        if GameRules.__is_insufficient_material(white_pieces) and GameRules.__is_insufficient_material(black_pieces):
+            return Result.INSUFFICIENT_MATERIAL
+        
+        return None
     
     @staticmethod
     def __get_psuedo_legal_moves(game: Game) -> list[Move]:
@@ -202,3 +227,14 @@ class GameRules:
                 ])
         
         return attacked_squares
+    
+    @staticmethod
+    def __is_insufficient_material(pieces: list[Piece]) -> bool:
+        if len(pieces) > 2:
+            return False
+        
+        piece_types = set([piece.type for piece in pieces])
+        return piece_types == set([PieceType.KING]) or \
+            piece_types == set([PieceType.KING, PieceType.KNIGHT]) or \
+            piece_types == set([PieceType.KING, PieceType.BISHOP])
+        

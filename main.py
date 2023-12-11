@@ -7,6 +7,8 @@ import pygame
 pygame.init()
 pygame.display.set_caption("Chess")
 running = True
+game_over = False
+result = None
 
 game = Game()
 legal_moves = GameRules.get_legal_moves(game)
@@ -24,11 +26,16 @@ while running:
         if event.type == pygame.QUIT:
             running = False
             
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
             move = graphics.handle_click(mouse_position, game.board, game.turn, legal_moves)
             
             if move is not None:
                 game.make_move(move)
                 legal_moves = GameRules.get_legal_moves(game)
+                result = GameRules.get_game_result(game) 
+                game_over = result is not None              
             
             graphics.draw_board(game.board)
+            
+    if game_over:
+        graphics.display_result(result)

@@ -1,6 +1,6 @@
 from board import Board
 from piece import PieceColor, PieceType
-from game_rules import GameRules
+from game_rules import Result
 from square import Square
 from move import Move
 from typing import Optional
@@ -11,7 +11,9 @@ class Color:
     LIGHT_SQAURE = pygame.Color('#ffffff')
     DARK_SQUARE = pygame.Color('#51753f')
     SELECTED_SQUARE = pygame.Color('#fff785')
-    MOVE_CIRCLE = pygame.Color('#000000')
+    BLACK = pygame.Color('#000000')
+    WHITE = pygame.Color('#ffffff')
+    GREY = pygame.Color('#bbbbbb')
 
 class Graphics:
     piece_images = {
@@ -54,7 +56,7 @@ class Graphics:
         self.move_circle.set_alpha(100)
         pygame.draw.circle(
             self.move_circle,
-            Color.MOVE_CIRCLE,
+            Color.BLACK,
             center=(SQUARE_SIZE / 2, SQUARE_SIZE / 2),
             radius=SQUARE_SIZE / 5
         )
@@ -125,7 +127,37 @@ class Graphics:
             self.selected_square = None
         
         return move
+    
+    def display_result(self, result: Result) -> None:
+        match result:
+            case Result.WHITE_WIN:
+                text = 'White wins by checkmate!'
+                
+            case Result.BLACK_WIN:
+                text = 'Black wins by checkmate!'
+                
+            case Result.STALEMATE:
+                text = 'Draw by stalemate!'
+                
+            case Result.INSUFFICIENT_MATERIAL:
+                text = 'Draw by insufficient material!'
+                
+        font = pygame.font.SysFont('Calibri', 32)
+        result_surface = font.render(text, True, Color.BLACK, Color.GREY)
+        
+        padding = 20
+        padded_result_surface = pygame.Surface((result_surface.get_width() + 20, result_surface.get_height() + 20))
+        padded_result_surface.fill(Color.GREY)
+        
+        x = (self.display.get_width() - result_surface.get_width()) / 2
+        y = (self.display.get_height() - result_surface.get_height()) / 2
 
+        self.display.blit(padded_result_surface, (x - padding / 2, y - padding / 2))
+        self.display.blit(result_surface, (x, y))
+        
+        # Update display
+        pygame.display.flip()
+        
     def __get_selected_square_moves_end_squares(self) -> list[Square]:
         if self.selected_square is None:
             return []
