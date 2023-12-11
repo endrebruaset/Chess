@@ -6,5 +6,8 @@ class Move:
         self.end = end
         
     def __str__(self) -> str:
-        return f'From: {self.start}, To: {self.end}'
+        return f'{self.start} to {self.end}'
+    
+    def __eq__(self, __value: object) -> bool:
+        return self.start == __value.start and self.end == __value.end
     

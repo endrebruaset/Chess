@@ -9,6 +9,7 @@ pygame.display.set_caption("Chess")
 running = True
 
 game = Game()
+legal_moves = GameRules.get_legal_moves(game)
 graphics = Graphics()
 graphics.draw_board(game.board)
 
@@ -24,11 +25,10 @@ while running:
             running = False
             
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print('Click')
-            move = graphics.handle_click(mouse_position, game.board, game.turn, game.legal_moves)
+            move = graphics.handle_click(mouse_position, game.board, game.turn, legal_moves)
             
             if move is not None:
-                print(f'{move}')
                 game.make_move(move)
+                legal_moves = GameRules.get_legal_moves(game)
             
             graphics.draw_board(game.board)

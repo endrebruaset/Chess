@@ -2,10 +2,8 @@ from board import Board
 from square import Square
 from piece import Piece, PieceColor, PieceType
 from move import Move
-from game_rules import GameRules
 from typing import Optional
-import copy
-
+from copy import deepcopy
 
 class Game:
     def __init__(self):
@@ -31,18 +29,14 @@ class Game:
         for column in range(8):
             self.board[Square(1, column)] = Piece(PieceColor.WHITE, PieceType.PAWN)
             self.board[Square(6, column)] = Piece(PieceColor.BLACK, PieceType.PAWN)
-            
-        # Get initial legal moves
-        self.legal_moves = GameRules.get_legal_moves(self.board, self.turn)
         
     def make_move(self, move: Move) -> None:
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = None
-        self.turn = PieceColor.BLACK if self.turn == PieceColor.WHITE else PieceColor.WHITE
-        self.legal_moves = GameRules.get_legal_moves(self.board, self.turn)
+        self.turn = PieceColor.opposing_color(self.turn)
         
     def simulate_move(self, move: Move) -> Board:
-        simulated_board = copy(self.board)
+        simulated_board = deepcopy(self.board)
         simulated_board[move.end] = simulated_board[move.start]
         simulated_board[move.start] = None
     

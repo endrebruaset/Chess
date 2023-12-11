@@ -1,5 +1,7 @@
 from board import Board
 from piece import PieceColor, PieceType
+from game import Game
+from game_rules import GameRules
 from square import Square
 from move import Move
 from typing import Optional
@@ -110,12 +112,10 @@ class Graphics:
         move = None
         
         clicked_square = Coordinates.get_square(coordinates)
-        print(f'{clicked_square}')
         if clicked_square is None:
             self.selected_square = None
         
         elif clicked_square in board.get_squares_with_pieces(turn):
-            print('Clicked own piece')
             self.selected_square = clicked_square
             self.selected_square_moves = [move.end for move in legal_moves if move.start == clicked_square]
         
@@ -145,7 +145,5 @@ class Coordinates:
         row = (height - y) // SQUARE_SIZE
         column = x // SQUARE_SIZE
         
-        if 0 <= row < 8 and 0 <= column < 8: 
-            return Square(row, column)
-        else: 
-            return None
+        square = Square(row, column)
+        return square if square.is_valid() else None

@@ -1,8 +1,13 @@
+from __future__ import annotations
 from enum import Enum
 
 class PieceColor(Enum):
     WHITE = 0
     BLACK = 1
+    
+    @staticmethod
+    def opposing_color(color: PieceColor) -> PieceColor:
+        return PieceColor.BLACK if color == PieceColor.WHITE else PieceColor.WHITE
     
 class PieceType(Enum):
     PAWN = 0,
