@@ -7,17 +7,18 @@ from move import Move, MoveType
 class GameRules:
     @staticmethod
     def get_legal_moves(game: Game) -> list[Move]:
+        legal_moves = []
+        
+        # Psuedo legal moves not exposing the king to a check
         psuedo_legal_moves = GameRules.__get_psuedo_legal_moves(game)
-        
-        # Remove moves exposing the king to a check
-        moves_resulting_in_check = []
         for move in psuedo_legal_moves:
-            if GameRules.is_check(game.simulate_move(move), king_color=game.turn):
-                moves_resulting_in_check.append(move)
+            if not GameRules.is_check(game.simulate_move(move), king_color=game.turn):
+                legal_moves.append(move)
         
-        # Castling
+        # Castling moves
+        legal_moves.extend(GameRules.__get_castling_moves(game))
         
-        return [move for move in psuedo_legal_moves if move not in moves_resulting_in_check]
+        return legal_moves
     
     @staticmethod
     def is_check(board: Board, king_color: PieceColor) -> bool:
@@ -34,30 +35,9 @@ class GameRules:
         if king_square is None:
             raise ValueError('Board has no king')
         
+        # King is in check if attacked by opposing pieces
         return king_square in attacked_squares
-        
-    @staticmethod
-    def __get_attacked_squares(board: Board, turn: PieceColor):
-        squares_with_own_pieces = board.get_squares_with_pieces(turn)
-        
-        attacked_squares = []
-        for square in squares_with_own_pieces:
-            piece = board[square]
-            if piece.type == PieceType.PAWN:
-                direction = Board.get_pawn_direction(piece.color)           
-                capture_squares = [
-                    Square(square.row + direction, square.column - 1),
-                    Square(square.row + direction, square.column + 1)
-                ]
-                
-                attacked_squares.extend([square for square in capture_squares if square.is_valid()])
-                
-            else:
-                attacked_squares.extend([
-                    move.end for move in GameRules.__get_psuedo_legal_moves_for_piece(piece, square, board)
-                ])
-        
-        return attacked_squares
+    
     
     @staticmethod
     def __get_psuedo_legal_moves(game: Game) -> list[Move]:
@@ -168,5 +148,57 @@ class GameRules:
                         psuedo_legal_moves.append(Move(start_square, end_square))
             
         return psuedo_legal_moves
-            
     
+    @staticmethod
+    def __get_castling_moves(game: Game) -> list[Move]:
+        if GameRules.is_check(game.board, game.turn):
+            return []
+        
+        empty_squares = game.board.get_empty_squares()
+        opponent_attacked_squares = GameRules.__get_attacked_squares(game.board, PieceColor.opposing_color(game.turn))
+        valid_castling_square = lambda square: square in empty_squares and square not in opponent_attacked_squares
+        
+        castling_moves = []
+        starting_row = Board.get_pawn_end_row(PieceColor.opposing_color(game.turn))
+        
+        if game.long_castling_rights[game.turn]:
+            long_castling_squares = [Square(starting_row, 1), Square(starting_row, 2), Square(starting_row, 3)]
+            if all([valid_castling_square(square) for square in long_castling_squares]):
+                castling_moves.extend([
+                    Move(Square(starting_row, 4), Square(starting_row, 0), MoveType.LONG_CASTLE),
+                    Move(Square(starting_row, 4), Square(starting_row, 1), MoveType.LONG_CASTLE),
+                    Move(Square(starting_row, 4), Square(starting_row, 2), MoveType.LONG_CASTLE)
+                ])
+            
+        if game.short_castling_rights[game.turn]:
+            short_castling_squares = [Square(starting_row, 5), Square(starting_row, 6)]
+            if all([valid_castling_square(square) for square in short_castling_squares]):
+                castling_moves.extend([
+                    Move(Square(starting_row, 4), Square(starting_row, 6), MoveType.SHORT_CASTLE),
+                    Move(Square(starting_row, 4), Square(starting_row, 7), MoveType.SHORT_CASTLE)
+                ])
+        
+        return castling_moves
+        
+    @staticmethod
+    def __get_attacked_squares(board: Board, turn: PieceColor) -> list[Square]:
+        squares_with_own_pieces = board.get_squares_with_pieces(turn)
+        
+        attacked_squares = []
+        for square in squares_with_own_pieces:
+            piece = board[square]
+            if piece.type == PieceType.PAWN:
+                direction = Board.get_pawn_direction(piece.color)           
+                capture_squares = [
+                    Square(square.row + direction, square.column - 1),
+                    Square(square.row + direction, square.column + 1)
+                ]
+                
+                attacked_squares.extend([square for square in capture_squares if square.is_valid()])
+                
+            else:
+                attacked_squares.extend([
+                    move.end for move in GameRules.__get_psuedo_legal_moves_for_piece(piece, square, board)
+                ])
+        
+        return attacked_squares

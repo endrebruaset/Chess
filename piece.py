@@ -18,6 +18,6 @@ class PieceType(Enum):
     KING = 5
 
 class Piece:
-    def __init__(self, color: PieceColor, type: PieceType):
+    def __init__(self, color: PieceColor, type: PieceType) -> None:
         self.color = color
         self.type = type

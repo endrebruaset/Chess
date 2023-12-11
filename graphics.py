@@ -113,17 +113,23 @@ class Graphics:
         if clicked_square is None:
             self.selected_square = None
         
+        elif clicked_square in self.__get_selected_square_moves_end_squares():
+            move = next((move for move in self.selected_square_moves if move.end == clicked_square))
+            self.selected_square = None
+            
         elif clicked_square in board.get_squares_with_pieces(turn):
             self.selected_square = clicked_square
             self.selected_square_moves = [move for move in legal_moves if move.start == clicked_square]
-        
-        elif self.selected_square is not None:
-            move = next((move for move in self.selected_square_moves if move.end == clicked_square), None)
+            
+        else:
             self.selected_square = None
         
         return move
 
     def __get_selected_square_moves_end_squares(self) -> list[Square]:
+        if self.selected_square is None:
+            return []
+        
         return [move.end for move in self.selected_square_moves]
       
 class Coordinates:

@@ -6,14 +6,12 @@ from typing import Optional
 from copy import deepcopy
 
 class Game:
-    def __init__(self):
+    def __init__(self) -> None:
         self.board = Board()
         self.turn = PieceColor.WHITE
         self.en_passant: Optional[Square] = None
-        self.castling_rights = {
-            PieceColor.WHITE: { "a": True, "h": True },
-            PieceColor.BLACK: { "a": True, "h": True }
-        }
+        self.short_castling_rights = { PieceColor.WHITE: True, PieceColor.BLACK: True }
+        self.long_castling_rights = { PieceColor.WHITE: True, PieceColor.BLACK: True }
         
         # Create starting position
         for row, color in zip([0, 7], [PieceColor.WHITE, PieceColor.BLACK]):
@@ -32,24 +30,31 @@ class Game:
         
     def make_move(self, move: Move) -> None:
         # Perform move
-        self.board[move.end] = self.board[move.start]
+        moved_piece = self.board[move.start]
+        self.board[move.end] = moved_piece
         self.board[move.start] = None
         
         # Check if pawn was captured en passant
-        if self.__is_en_passant(move):
+        if self.__is_en_passant(move, moved_piece):
             captured_pawn = Square(move.end.row - Board.get_pawn_direction(self.turn), move.end.column)
             self.board[captured_pawn] = None
         
         # Update special moves state
-        match move.move_type:
+        match move.type:
             case MoveType.ORDINARY:
                 self.en_passant = None
+                self.__set_castling_rights(move, moved_piece)
                 
             case MoveType.DOUBLE_PAWN_PUSH:
                 self.en_passant = Square(move.end.row - Board.get_pawn_direction(self.turn), move.end.column)
                 
             case MoveType.PAWN_PROMOTION:
                 self.board[move.end] = Piece(self.turn, PieceType.QUEEN)
+                
+            case MoveType.SHORT_CASTLE | MoveType.LONG_CASTLE:
+                self.__castle(move)
+                self.short_castling_rights[self.turn] = False
+                self.long_castling_rights[self.turn] = False   
         
         # Change turn
         self.turn = PieceColor.opposing_color(self.turn)
@@ -61,10 +66,37 @@ class Game:
     
         return simulated_board
     
-    def __is_en_passant(self, move: Move):
-        moved_piece = self.board[move.end]
-        
+    def __is_en_passant(self, move: Move, moved_piece: Piece) -> bool:
         return self.en_passant is not None \
             and move.end == self.en_passant \
             and moved_piece.type == PieceType.PAWN
+            
+    def __castle(self, move: Move) -> None:
+        row = move.end.row
+        
+        if move.type == MoveType.LONG_CASTLE:
+            empty_squares = [Square(row, 0), Square(row, 1), Square(row, 4)]
+            king_square = Square(row, 2)
+            rook_square = Square(row, 3)
+        
+        elif move.type == MoveType.SHORT_CASTLE:
+            empty_squares = [Square(row, 4), Square(row, 7)]
+            king_square = Square(row, 6)
+            rook_square = Square(row, 5)
+        
+        self.board[king_square] = Piece(self.turn, PieceType.KING)
+        self.board[rook_square] = Piece(self.turn, PieceType.ROOK)
+        for empty_square in empty_squares:
+            self.board[empty_square] = None
+            
+    def __set_castling_rights(self, move: Move, moved_piece: Piece) -> None:
+        if moved_piece.type == PieceType.KING:
+            self.short_castling_rights[self.turn] = False
+            self.long_castling_rights[self.turn] = False
+        
+        elif moved_piece.type == PieceType.ROOK and move.start.column == 0:
+            self.long_castling_rights[self.turn] = False
+        
+        elif moved_piece.type == PieceType.ROOK and move.start.column == 7:
+            self.short_castling_rights[self.turn] = False
         

@@ -7,13 +7,13 @@ class Board:
         self.squares = [Square(row, col) for col in range(8) for row in range(8)]
         self.board: dict[Square, Optional[Piece]] = { square: None for square in self.squares }
         
-    def __getitem__(self, square: Square):
+    def __getitem__(self, square: Square) -> Piece:
         if square.is_valid():
             return self.board[square]
         else:
             raise KeyError(f'Invalid square: {square}')
             
-    def __setitem__(self, square: Square, piece: Piece):
+    def __setitem__(self, square: Square, piece: Piece) -> None:
         if square.is_valid():
             self.board[square] = piece
         else:
