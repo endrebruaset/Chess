@@ -1,7 +1,7 @@
 from board import Board
 from square import Square
 from piece import Piece, PieceColor, PieceType
-from move import Move
+from move import Move, MoveType
 from typing import Optional
 from copy import deepcopy
 
@@ -9,7 +9,7 @@ class Game:
     def __init__(self):
         self.board = Board()
         self.turn = PieceColor.WHITE
-        self.double_pawn_push: Optional[Square] = None
+        self.en_passant: Optional[Square] = None
         self.castling_rights = {
             PieceColor.WHITE: { "a": True, "h": True },
             PieceColor.BLACK: { "a": True, "h": True }
@@ -31,8 +31,24 @@ class Game:
             self.board[Square(6, column)] = Piece(PieceColor.BLACK, PieceType.PAWN)
         
     def make_move(self, move: Move) -> None:
+        # Perform move
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = None
+        
+        # Check if pawn was captured en passant
+        if self.__is_en_passant(move):
+            captured_pawn = Square(move.end.row - Board.get_pawn_direction(self.turn), move.end.column)
+            self.board[captured_pawn] = None
+        
+        # Update special moves state
+        match move.move_type:
+            case MoveType.ORDINARY:
+                self.en_passant = None
+                
+            case MoveType.DOUBLE_PAWN_PUSH:
+                self.en_passant = Square(move.end.row - Board.get_pawn_direction(self.turn), move.end.column)
+        
+        # Change turn
         self.turn = PieceColor.opposing_color(self.turn)
         
     def simulate_move(self, move: Move) -> Board:
@@ -41,4 +57,11 @@ class Game:
         simulated_board[move.start] = None
     
         return simulated_board
+    
+    def __is_en_passant(self, move: Move):
+        moved_piece = self.board[move.end]
+        
+        return self.en_passant is not None \
+            and move.end == self.en_passant \
+            and moved_piece.type == PieceType.PAWN
         

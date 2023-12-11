@@ -28,7 +28,9 @@ while running:
             move = graphics.handle_click(mouse_position, game.board, game.turn, legal_moves)
             
             if move is not None:
+                print(move.move_type)
                 game.make_move(move)
                 legal_moves = GameRules.get_legal_moves(game)
+                print(game.en_passant)
             
             graphics.draw_board(game.board)

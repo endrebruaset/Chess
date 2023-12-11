@@ -37,4 +37,12 @@ class Board:
             if piece is None:
                 empty_squares.append(square)
                 
-        return empty_squares    
+        return empty_squares
+    
+    @staticmethod
+    def get_pawn_direction(color: PieceColor) -> int:
+        return 1 if color == PieceColor.WHITE else -1
+    
+    @staticmethod
+    def get_pawn_starting_row(color: PieceColor) -> int:
+        return 1 if color == PieceColor.WHITE else 6

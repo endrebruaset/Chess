@@ -2,23 +2,25 @@ from game import Game
 from board import Board
 from piece import Piece, PieceColor, PieceType
 from square import Square
-from move import Move
+from move import Move, MoveType
 
 class GameRules:
     @staticmethod
     def get_legal_moves(game: Game) -> list[Move]:
-        psuedo_legal_moves = GameRules.__get_psuedo_legal_moves(game.board, game.turn)
+        psuedo_legal_moves = GameRules.__get_psuedo_legal_moves(game)
         
         # Remove moves exposing the king to a check
         moves_resulting_in_check = []
         for move in psuedo_legal_moves:
-            if GameRules.__is_check(game.simulate_move(move), king_color=game.turn):
+            if GameRules.is_check(game.simulate_move(move), king_color=game.turn):
                 moves_resulting_in_check.append(move)
         
-        return filter(lambda move: move not in moves_resulting_in_check, psuedo_legal_moves)
+        # Castling
+        
+        return [move for move in psuedo_legal_moves if move not in moves_resulting_in_check]
     
     @staticmethod
-    def __is_check(board: Board, king_color: PieceColor) -> bool:
+    def is_check(board: Board, king_color: PieceColor) -> bool:
         opponent_color = PieceColor.opposing_color(king_color)
         attacked_squares = GameRules.__get_attacked_squares(board, opponent_color)
         
@@ -31,7 +33,7 @@ class GameRules:
         
         if king_square is None:
             raise ValueError('Board has no king')
-            
+        
         return king_square in attacked_squares
         
     @staticmethod
@@ -42,7 +44,7 @@ class GameRules:
         for square in squares_with_own_pieces:
             piece = board[square]
             if piece.type == PieceType.PAWN:
-                direction = 1 if piece.color == PieceColor.WHITE else -1             
+                direction = Board.get_pawn_direction(piece.color)           
                 capture_squares = [
                     Square(square.row + direction, square.column - 1),
                     Square(square.row + direction, square.column + 1)
@@ -58,27 +60,32 @@ class GameRules:
         return attacked_squares
     
     @staticmethod
-    def __get_psuedo_legal_moves(board: Board, turn: PieceColor) -> list[Move]:
-        squares_with_own_pieces = board.get_squares_with_pieces(turn)
+    def __get_psuedo_legal_moves(game: Game) -> list[Move]:
+        squares_with_own_pieces = game.board.get_squares_with_pieces(game.turn)
         
         psuedo_legal_moves = []
         for square in squares_with_own_pieces:
-            piece = board[square]
-            psuedo_legal_moves.extend(GameRules.__get_psuedo_legal_moves_for_piece(piece, square, board))
+            piece = game.board[square]
+            psuedo_legal_moves.extend(
+                GameRules.__get_psuedo_legal_moves_for_piece(piece, square, game.board, game.en_passant)
+            )
         
         return psuedo_legal_moves
     
     @staticmethod
-    def __get_psuedo_legal_moves_for_piece(piece: Piece, start_square: Square, board: Board, captures_only=False) -> list[Move]:
+    def __get_psuedo_legal_moves_for_piece(piece: Piece, start_square: Square, board: Board, en_passant: Square = None) -> list[Move]:
         psuedo_legal_moves = []
         
         opponent_color = PieceColor.opposing_color(piece.color)
         squares_with_opponent_pieces = board.get_squares_with_pieces(opponent_color)
+        if en_passant is not None:
+            squares_with_opponent_pieces.append(en_passant)
+            
         empty_squares = board.get_empty_squares()
         
         match piece.type:
             case PieceType.PAWN:
-                direction = 1 if piece.color == PieceColor.WHITE else -1
+                direction = Board.get_pawn_direction(piece.color)
                         
                 # Captures               
                 capture_squares = [
@@ -95,10 +102,10 @@ class GameRules:
                     psuedo_legal_moves.append(Move(start_square, one_square_forward))
                     
                     # Two squares forward
-                    starting_row = 1 if piece.color == PieceColor.WHITE else 6
+                    starting_row = Board.get_pawn_starting_row(piece.color)
                     two_squares_forward = Square(start_square.row + 2*direction, start_square.column)
                     if start_square.row == starting_row and two_squares_forward in empty_squares:
-                        psuedo_legal_moves.append(Move(start_square, two_squares_forward))
+                        psuedo_legal_moves.append(Move(start_square, two_squares_forward, MoveType.DOUBLE_PAWN_PUSH))
             
             case PieceType.KNIGHT:
                 available_squares = empty_squares + squares_with_opponent_pieces
