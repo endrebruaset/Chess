@@ -10,7 +10,6 @@ import pygame
 class Color:
     LIGHT_SQAURE = pygame.Color('#ffffff')
     DARK_SQUARE = pygame.Color('#51753f')
-    CHECKED_SQUARE = pygame.Color('#ba4141')
     SELECTED_SQUARE = pygame.Color('#fff785')
     MOVE_CIRCLE = pygame.Color('#000000')
 
@@ -60,8 +59,7 @@ class Graphics:
             radius=SQUARE_SIZE / 5
         )
         
-        # State
-        self.checked_square: Optional[Square] = None
+        # Selection state
         self.selected_square: Optional[Square] = None
         self.selected_square_moves: list[Move] = []
         
@@ -71,11 +69,12 @@ class Graphics:
         
         # Highlight selected square
         if self.selected_square is not None:
-            self.__draw_square(self.selected_square, Color.SELECTED_SQUARE)
-
-        # Highlight king if checked
-        # if self.checked_square is not None:
-        #     self.__draw_square(self.checked_square, Color.CHECKED_SQUARE)
+            (x, y) = Coordinates.get_coordinates(self.selected_square)
+            pygame.draw.rect(
+                self.display,
+                Color.SELECTED_SQUARE,
+                (x, y, SQUARE_SIZE, SQUARE_SIZE)
+            )
         
         # Draw pieces
         squares_with_pieces = board.get_squares_with_pieces(PieceColor.WHITE) + board.get_squares_with_pieces(PieceColor.BLACK)
@@ -123,16 +122,7 @@ class Graphics:
             self.selected_square = None
         
         return move
-    
-    def __draw_square(self, square: Square, color: Color) -> None:
-        (x, y) = Coordinates.get_coordinates(square)
-        
-        pygame.draw.rect(
-            self.display,
-            color,
-            (x, y, SQUARE_SIZE, SQUARE_SIZE)
-        )
-        
+
     def __get_selected_square_moves_end_squares(self) -> list[Square]:
         return [move.end for move in self.selected_square_moves]
       

@@ -47,6 +47,9 @@ class Game:
                 
             case MoveType.DOUBLE_PAWN_PUSH:
                 self.en_passant = Square(move.end.row - Board.get_pawn_direction(self.turn), move.end.column)
+                
+            case MoveType.PAWN_PROMOTION:
+                self.board[move.end] = Piece(self.turn, PieceType.QUEEN)
         
         # Change turn
         self.turn = PieceColor.opposing_color(self.turn)

@@ -86,24 +86,26 @@ class GameRules:
         match piece.type:
             case PieceType.PAWN:
                 direction = Board.get_pawn_direction(piece.color)
+                one_row_forward = start_square.row + direction
+                move_type = MoveType.PAWN_PROMOTION if one_row_forward == Board.get_pawn_end_row(piece.color) else MoveType.ORDINARY
                         
                 # Captures               
                 capture_squares = [
-                    Square(start_square.row + direction, start_square.column - 1),
-                    Square(start_square.row + direction, start_square.column + 1)
+                    Square(one_row_forward, start_square.column - 1),
+                    Square(one_row_forward, start_square.column + 1)
                 ]
                 for capture_square in capture_squares:
                     if capture_square in squares_with_opponent_pieces:
-                        psuedo_legal_moves.append(Move(start_square, capture_square))
+                        psuedo_legal_moves.append(Move(start_square, capture_square, move_type))
                 
                 # One square forward
-                one_square_forward = Square(start_square.row + direction, start_square.column)
+                one_square_forward = Square(one_row_forward, start_square.column)
                 if one_square_forward in empty_squares:
-                    psuedo_legal_moves.append(Move(start_square, one_square_forward))
+                    psuedo_legal_moves.append(Move(start_square, one_square_forward, move_type))
                     
                     # Two squares forward
                     starting_row = Board.get_pawn_starting_row(piece.color)
-                    two_squares_forward = Square(start_square.row + 2*direction, start_square.column)
+                    two_squares_forward = Square(one_row_forward + direction, start_square.column)
                     if start_square.row == starting_row and two_squares_forward in empty_squares:
                         psuedo_legal_moves.append(Move(start_square, two_squares_forward, MoveType.DOUBLE_PAWN_PUSH))
             
