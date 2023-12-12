@@ -87,46 +87,35 @@ class Graphics:
             self.display.blit(piece_image, coordinates)
         
         # Show available moves
-        if self.selected_square is not None:
-            for move in self.selected_square_moves:
-                self.display.blit(self.move_circle, Coordinates.get_coordinates(move.end))
+        for square in self.__get_selected_square_moves_end_squares():
+            self.display.blit(self.move_circle, Coordinates.get_coordinates(square))
         
         # Update display
         pygame.display.flip()
         
-    def set_cursor(self, coordinates: tuple[int, int], board: Board, turn: PieceColor) -> None:
-        square_hovered = Coordinates.get_square(coordinates)
-        if square_hovered is None:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-            
-        elif square_hovered in board.get_squares_with_pieces(turn):
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-            
-        elif self.selected_square is not None and square_hovered in self.__get_selected_square_moves_end_squares():
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-            
-        else:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-        
     def handle_click(self, coordinates: tuple[int, int], board: Board, turn, legal_moves: list[Move]) -> Optional[Move]:               
         move = None
-        
+        selected_square = None
+
         clicked_square = Coordinates.get_square(coordinates)
-        if clicked_square is None:
-            self.selected_square = None
-        
-        elif clicked_square in self.__get_selected_square_moves_end_squares():
+        if clicked_square is not None and clicked_square in self.__get_selected_square_moves_end_squares():
             move = next((move for move in self.selected_square_moves if move.end == clicked_square))
-            self.selected_square = None
             
-        elif clicked_square in board.get_squares_with_pieces(turn):
-            self.selected_square = clicked_square
+        elif clicked_square is not None and clicked_square in board.get_squares_with_pieces(turn):
+            selected_square = clicked_square
             self.selected_square_moves = [move for move in legal_moves if move.start == clicked_square]
-            
-        else:
-            self.selected_square = None
         
+        self.selected_square = selected_square
         return move
+        
+    def set_cursor(self, coordinates: tuple[int, int], board: Board, turn: PieceColor) -> None:
+        square_hovered = Coordinates.get_square(coordinates)
+        clickable_squares = board.get_squares_with_pieces(turn) + self.__get_selected_square_moves_end_squares()
+        
+        if square_hovered is not None and square_hovered in clickable_squares:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
     
     def display_result(self, result: Result) -> None:
         match result:
@@ -146,7 +135,7 @@ class Graphics:
         result_surface = font.render(text, True, Color.BLACK, Color.GREY)
         
         padding = 20
-        padded_result_surface = pygame.Surface((result_surface.get_width() + 20, result_surface.get_height() + 20))
+        padded_result_surface = pygame.Surface((result_surface.get_width() + padding, result_surface.get_height() + padding))
         padded_result_surface.fill(Color.GREY)
         
         x = (self.display.get_width() - result_surface.get_width()) / 2
