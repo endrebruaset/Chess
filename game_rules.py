@@ -115,8 +115,8 @@ class GameRules:
                         psuedo_legal_moves.append(Move(start_square, two_squares_forward, MoveType.DOUBLE_PAWN_PUSH))
             
             case PieceType.KNIGHT:
-                available_squares = empty_squares + squares_with_opponent_pieces
                 moves = [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]
+                available_squares = empty_squares + squares_with_opponent_pieces
                 
                 for move in moves:
                     end_square = Square(start_square.row + move[0], start_square.column + move[1])
@@ -126,36 +126,16 @@ class GameRules:
             case PieceType.BISHOP:
                 directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
                 for direction in directions:
-                    steps = 1
-                    while True:
-                        end_square = Square(start_square.row + direction[0]*steps, start_square.column + direction[1]*steps)
-                        if end_square in empty_squares:
-                            psuedo_legal_moves.append(Move(start_square, end_square))
-                            steps += 1
-                        
-                        elif end_square in squares_with_opponent_pieces:
-                            psuedo_legal_moves.append(Move(start_square, end_square))
-                            break
-                        
-                        else:
-                            break
+                    psuedo_legal_moves.extend(
+                        GameRules.__get_ranged_piece_psuedo_legal_moves_in_direction(direction, start_square, empty_squares, squares_with_opponent_pieces)
+                    )
             
             case PieceType.ROOK:
                 directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
                 for direction in directions:
-                    steps = 1
-                    while True:
-                        end_square = Square(start_square.row + direction[0]*steps, start_square.column + direction[1]*steps)
-                        if end_square in empty_squares:
-                            psuedo_legal_moves.append(Move(start_square, end_square))
-                            steps += 1
-                        
-                        elif end_square in squares_with_opponent_pieces:
-                            psuedo_legal_moves.append(Move(start_square, end_square))
-                            break
-                        
-                        else:
-                            break
+                    psuedo_legal_moves.extend(
+                        GameRules.__get_ranged_piece_psuedo_legal_moves_in_direction(direction, start_square, empty_squares, squares_with_opponent_pieces)
+                    )
             
             case PieceType.QUEEN:
                 psuedo_legal_moves.extend(
@@ -164,8 +144,8 @@ class GameRules:
                 )                
             
             case PieceType.KING:
-                available_squares = empty_squares + squares_with_opponent_pieces
                 moves = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)]
+                available_squares = empty_squares + squares_with_opponent_pieces
                 
                 for move in moves:
                     end_square = Square(start_square.row + move[0], start_square.column + move[1])
@@ -237,4 +217,29 @@ class GameRules:
         return piece_types == set([PieceType.KING]) or \
             piece_types == set([PieceType.KING, PieceType.KNIGHT]) or \
             piece_types == set([PieceType.KING, PieceType.BISHOP])
+    
+    @staticmethod
+    def __get_ranged_piece_psuedo_legal_moves_in_direction(
+        direction: tuple[int, int], 
+        start_square: Square, 
+        empty_squares: list[Square], 
+        squares_with_opponent_pieces: list[Square]
+    ) -> list[Move]:
+        psuedo_legal_moves = []
+
+        steps = 1
+        while True:
+            end_square = Square(start_square.row + direction[0]*steps, start_square.column + direction[1]*steps)
+            if end_square in empty_squares:
+                psuedo_legal_moves.append(Move(start_square, end_square))
+                steps += 1
+            
+            elif end_square in squares_with_opponent_pieces:
+                psuedo_legal_moves.append(Move(start_square, end_square))
+                break
+            
+            else:
+                break
+
+        return psuedo_legal_moves
         
