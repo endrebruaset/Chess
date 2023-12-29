@@ -41,13 +41,13 @@ class Graphics:
         
         # Create background
         self.background = pygame.Surface((height, width))
-        self.background.fill(Color.LIGHT_SQAURE)
+        self.background.fill(Color.DARK_SQUARE)
         for row in range(0, 8):
             for column in range(0, 8):
                 if (row + column) % 2 == 0:
                     pygame.draw.rect(
                         self.background, 
-                        Color.DARK_SQUARE, 
+                        Color.LIGHT_SQAURE, 
                         (row * SQUARE_SIZE, column * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
                     )
                     
