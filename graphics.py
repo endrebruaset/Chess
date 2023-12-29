@@ -5,6 +5,8 @@ from square import Square
 from move import Move
 from typing import Optional
 from settings import SQUARE_SIZE
+import io
+import string
 import pygame
 
 class Color:
@@ -14,24 +16,32 @@ class Color:
     BLACK = pygame.Color('#000000')
     WHITE = pygame.Color('#ffffff')
     GREY = pygame.Color('#bbbbbb')
+    
+def load_piece_image(path: str) -> pygame.Surface:
+        with open(path, 'r', encoding='utf8') as file:
+            svg_template = string.Template(file.read())
+        
+        svg_string = svg_template.substitute({'size': SQUARE_SIZE})
+        svg_bytes = io.BytesIO(svg_string.encode())
+        return pygame.image.load(svg_bytes)
 
 class Graphics:
     piece_images = {
         PieceColor.WHITE: {
-            PieceType.PAWN:     pygame.image.load('pieces/wP.svg'),
-            PieceType.KNIGHT:   pygame.image.load('pieces/wN.svg'),
-            PieceType.BISHOP:   pygame.image.load('pieces/wB.svg'), 
-            PieceType.ROOK:     pygame.image.load('pieces/wR.svg'), 
-            PieceType.QUEEN:    pygame.image.load('pieces/wQ.svg'), 
-            PieceType.KING:     pygame.image.load('pieces/wK.svg'), 
+            PieceType.PAWN:     load_piece_image('pieces/wP.svg'),
+            PieceType.KNIGHT:   load_piece_image('pieces/wN.svg'),
+            PieceType.BISHOP:   load_piece_image('pieces/wB.svg'), 
+            PieceType.ROOK:     load_piece_image('pieces/wR.svg'), 
+            PieceType.QUEEN:    load_piece_image('pieces/wQ.svg'), 
+            PieceType.KING:     load_piece_image('pieces/wK.svg'), 
         },
         PieceColor.BLACK: {
-            PieceType.PAWN:     pygame.image.load('pieces/bP.svg'),
-            PieceType.KNIGHT:   pygame.image.load('pieces/bN.svg'),
-            PieceType.BISHOP:   pygame.image.load('pieces/bB.svg'), 
-            PieceType.ROOK:     pygame.image.load('pieces/bR.svg'), 
-            PieceType.QUEEN:    pygame.image.load('pieces/bQ.svg'), 
-            PieceType.KING:     pygame.image.load('pieces/bK.svg'), 
+            PieceType.PAWN:     load_piece_image('pieces/bP.svg'),
+            PieceType.KNIGHT:   load_piece_image('pieces/bN.svg'),
+            PieceType.BISHOP:   load_piece_image('pieces/bB.svg'), 
+            PieceType.ROOK:     load_piece_image('pieces/bR.svg'), 
+            PieceType.QUEEN:    load_piece_image('pieces/bQ.svg'), 
+            PieceType.KING:     load_piece_image('pieces/bK.svg'), 
         },
     }
     
